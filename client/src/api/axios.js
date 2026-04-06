@@ -1,7 +1,6 @@
 import axios from 'axios'
-
 const API = axios.create({
-  baseURL: 'https://feedtheneedy-backend.onrender.com/api'
+  baseURL: 'https://feedtheneedy-jrlo.onrender.com/api'
 })
 
 API.interceptors.request.use((req) => {
