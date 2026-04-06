@@ -36,12 +36,10 @@ app.set('io', io);
 app.set('connectedVolunteers', connectedVolunteers);
 
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://feedtheneedy.onrender.com',
-  ],
-  credentials: true,
-}));app.use(express.json());
+  origin: '*',
+  credentials: false,
+}));
+app.use(express.json());
 
 app.use('/api/auth',     require('./routes/auth'));
 app.use('/api/listings', require('./routes/listings'));
