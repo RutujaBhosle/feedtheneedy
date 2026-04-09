@@ -10,37 +10,47 @@ export const SocketProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([])
 
   useEffect(() => {
-    // Connect to socket server
-    socketRef.current = io('http://localhost:5000')
+    // Connect to socket
+    socketRef.current = io('http://localhost:5000', {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+    })
 
     socketRef.current.on('connect', () => {
-      console.log('✅ Socket connected')
-      // If volunteer, register socket
+      console.log('✅ Socket connected:', socketRef.current.id)
+      // Register immediately if already logged in as volunteer
       if (user?.role === 'volunteer') {
+        console.log('🚴 Registering volunteer on connect:', user.id)
         socketRef.current.emit('register_volunteer', { userId: user.id })
       }
     })
 
-    // Listen for new listing notifications
-    socketRef.current.on('new_listing_notification', (data) => {
-      console.log('🔔 New notification:', data)
-      setNotifications(prev => [data, ...prev].slice(0, 10)) // keep last 10
+    socketRef.current.on('connect_error', err => {
+      console.error('❌ Socket error:', err.message)
     })
 
-    return () => {
-      socketRef.current?.disconnect()
-    }
-  }, [user])
+    // Listen for new food notification
+    socketRef.current.on('new_listing_notification', data => {
+      console.log('🔔 Notification received!', data)
+      setNotifications(prev => [data, ...prev].slice(0, 10))
+    })
 
-  // Re-register when user logs in as volunteer
+    return () => socketRef.current?.disconnect()
+  }, [])
+
+  // Re-register when user logs in
   useEffect(() => {
-    if (user?.role === 'volunteer' && socketRef.current?.connected) {
+    if (
+      user?.role === 'volunteer' &&
+      socketRef.current?.connected
+    ) {
+      console.log('🚴 Re-registering volunteer:', user.id)
       socketRef.current.emit('register_volunteer', { userId: user.id })
     }
   }, [user])
 
-  const clearNotifications = () => setNotifications([])
-  const removeNotification = id =>
+  const clearNotifications  = () => setNotifications([])
+  const removeNotification  = id =>
     setNotifications(prev => prev.filter(n => n.listingId !== id))
 
   return (
